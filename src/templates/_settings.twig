@@ -1,0 +1,125 @@
+{% import "_includes/forms.twig" as forms %}
+
+<h2>{{ "Recipients"|t('entry-notifications') }}</h2>
+
+{{ forms.textareaField({
+    label: "Email addresses"|t('entry-notifications'),
+    instructions: "One email address per line. These addresses will receive a notification when a new entry is published in the selected sections."|t('entry-notifications'),
+    id: 'recipientsText',
+    name: 'recipientsText',
+    value: settings.recipientsText,
+    rows: 5,
+    placeholder: 'name@example.com',
+}) }}
+
+<hr>
+
+<h2>{{ "Sections"|t('entry-notifications') }}</h2>
+
+<div class="field">
+    <div class="heading">
+        <div class="instructions">
+            <p>{{ "Select the sections for which an email should be sent when a new entry is published."|t('entry-notifications') }}</p>
+        </div>
+    </div>
+    <div class="input">
+        {% for section in allSections %}
+            <div class="checkbox-wrapper">
+                <label>
+                    <input type="checkbox"
+                        name="sections[]"
+                        value="{{ section.handle }}"
+                        {% if section.handle in (settings.sections ?? []) %}checked{% endif %}
+                    >
+                    {{ section.name }}
+                    <code class="code" style="font-weight:bold; opacity:0.5; margin-left:5px; font-size:11px;">{{ section.handle }}</code>
+                </label>
+            </div>
+        {% endfor %}
+
+        {% if not allSections %}
+            <p class="light">{{ "No sections found."|t('entry-notifications') }}</p>
+        {% endif %}
+    </div>
+</div>
+
+<hr>
+
+<h2>{{ "Email"|t('entry-notifications') }}</h2>
+
+{{ forms.textField({
+    label: "Subject"|t('entry-notifications'),
+    id: 'emailSubject',
+    name: 'emailSubject',
+    value: settings.emailSubject,
+}) }}
+
+{{ forms.textareaField({
+    label: "Body"|t('entry-notifications'),
+    instructions: "Use plain text. Line breaks are preserved in the email."|t('entry-notifications'),
+    id: 'emailBody',
+    name: 'emailBody',
+    value: settings.emailBody,
+    rows: 10,
+}) }}
+
+<div class="field">
+    <div class="heading">
+        <label>{{ "Available variables"|t('entry-notifications') }}</label>
+    </div>
+    <div class="input">
+        <div style="display:flex; flex-wrap:wrap; gap:6px; margin-top:4px;">
+            {% set vars = {
+                '{sectionName}': "Section name"|t('entry-notifications'),
+                '{title}':       "Entry title"|t('entry-notifications'),
+                '{entryUrl}':    "Front-end URL"|t('entry-notifications'),
+                '{cpUrl}':       "Control panel URL"|t('entry-notifications'),
+                '{date}':        "Publication date"|t('entry-notifications'),
+            } %}
+            {% for variable, label in vars %}
+                <button type="button" class="en-var-chip" data-var="{{ variable }}"
+                    title="{{ label }}"
+                    style="
+                        font-family: monospace;
+                        font-size: 12px;
+                        padding: 3px 8px;
+                        border-radius: 3px;
+                        border: 1px solid rgba(96,125,159,.3);
+                        background: rgba(96,125,159,.08);
+                        cursor: pointer;
+                        color: inherit;
+                    ">{{ variable }}</button>
+            {% endfor %}
+        </div>
+    </div>
+</div>
+
+{% js %}
+(function () {
+    var lastField = null;
+
+    ['emailSubject', 'emailBody'].forEach(function (name) {
+        var el = document.querySelector('[name*="' + name + '"]');
+        if (!el) return;
+        el.addEventListener('focus', function () { lastField = el; });
+    });
+
+    document.querySelectorAll('.en-var-chip').forEach(function (btn) {
+        btn.addEventListener('mousedown', function (e) {
+            // Prevent the button from stealing focus so selectionStart/End stay valid
+            e.preventDefault();
+        });
+        btn.addEventListener('click', function () {
+            var variable = this.dataset.var;
+            if (!lastField) return;
+
+            var start = lastField.selectionStart ?? lastField.value.length;
+            var end   = lastField.selectionEnd   ?? lastField.value.length;
+
+            lastField.value = lastField.value.substring(0, start) + variable + lastField.value.substring(end);
+            lastField.selectionStart = lastField.selectionEnd = start + variable.length;
+            lastField.focus();
+        });
+    });
+}());
+{% endjs %}
