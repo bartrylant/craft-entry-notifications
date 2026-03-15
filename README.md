@@ -1,6 +1,8 @@
 # Entry Notifications for Craft CMS
 
-Receive an email notification whenever a new entry is published in selected sections. No config files. No code. No fuss. Just pick your sections, add some email addresses, and Entry Notifications takes care of the rest.
+Entry Notifications emails your chosen recipients the moment a new entry goes live — no config files, no webhooks, no code. Open the control panel, choose the sections, add the recipients, and you’re done.
+
+This plugin is intentionally minimal. No complex condition builders, no scheduled entries, no cron jobs — just simple, reliable notifications when an entry is published.
 
 ## Features
 
