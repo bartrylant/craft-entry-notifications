@@ -17,6 +17,7 @@
       "bartrylant\\entrynotifications\\": "src/"
     }
   },
+  "version": "1.0.1",
   "extra": {
     "name": "Entry Notifications",
     "handle": "entry-notifications",

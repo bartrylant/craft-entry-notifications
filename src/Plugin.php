@@ -9,6 +9,7 @@ use craft\elements\Entry;
 use craft\events\ModelEvent;
 use craft\events\RegisterTemplateRootsEvent;
 use craft\web\View;
+use bartrylant\entrynotifications\jobs\SendNotificationJob;
 use bartrylant\entrynotifications\models\Settings;
 use yii\base\Event;
 
@@ -96,24 +97,27 @@ class Plugin extends BasePlugin
                     return;
                 }
 
+                $author = $entry->getAuthor();
+
                 $variables = [
-                    '{sectionName}' => $entry->section->name,
-                    '{title}'       => $entry->title,
-                    '{entryUrl}'    => $entry->url ?? '',
-                    '{cpUrl}'       => $entry->cpEditUrl,
-                    '{date}'        => $entry->dateCreated->format('d/m/Y'),
+                    '{sectionName}'  => $entry->section->name,
+                    '{title}'        => $entry->title,
+                    '{entryUrl}'     => $entry->url ?? '',
+                    '{cpUrl}'        => $entry->cpEditUrl,
+                    '{date}'         => $entry->dateCreated->format('d/m/Y'),
+                    '{authorName}'   => $author ? ($author->fullName ?: $author->username) : '',
+                    '{authorEmail}'  => $author ? ($author->email ?? '') : '',
                 ];
 
                 $subject = str_replace(array_keys($variables), array_values($variables), $settings->emailSubject);
                 $body    = nl2br(str_replace(array_keys($variables), array_values($variables), $settings->emailBody));
 
                 foreach ($recipients as $email) {
-                    Craft::$app->getMailer()
-                        ->compose()
-                        ->setTo($email)
-                        ->setSubject($subject)
-                        ->setHtmlBody($body)
-                        ->send();
+                    Craft::$app->queue->push(new SendNotificationJob([
+                        'email'   => $email,
+                        'subject' => $subject,
+                        'body'    => $body,
+                    ]));
                 }
             }
         );

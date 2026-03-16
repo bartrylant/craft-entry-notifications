@@ -20,7 +20,7 @@ class Settings extends Model
 
     public string $emailSubject = 'New entry published in {sectionName}: {title}';
 
-    public string $emailBody = "A new entry has been published on the website.\n\nSection: {sectionName}\nTitle: {title}\nDate: {date}\n\nView on the website: {entryUrl}\nEdit in the control panel: {cpUrl}";
+    public string $emailBody = "A new entry has been published on the website.\n\nSection: {sectionName}\nTitle: {title}\nDate: {date}\nAuthor: {authorName} ({authorEmail})\n\nView on the website: {entryUrl}\nEdit in the control panel: {cpUrl}";
 
     public function defineRules(): array
     {

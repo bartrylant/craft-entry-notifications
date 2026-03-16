@@ -70,11 +70,13 @@
     <div class="input">
         <div style="display:flex; flex-wrap:wrap; gap:6px; margin-top:4px;">
             {% set vars = {
-                '{sectionName}': "Section name"|t('entry-notifications'),
-                '{title}':       "Entry title"|t('entry-notifications'),
-                '{entryUrl}':    "Front-end URL"|t('entry-notifications'),
-                '{cpUrl}':       "Control panel URL"|t('entry-notifications'),
-                '{date}':        "Publication date"|t('entry-notifications'),
+                '{sectionName}':  "Section name"|t('entry-notifications'),
+                '{title}':        "Entry title"|t('entry-notifications'),
+                '{entryUrl}':     "Front-end URL"|t('entry-notifications'),
+                '{cpUrl}':        "Control panel URL"|t('entry-notifications'),
+                '{date}':         "Publication date"|t('entry-notifications'),
+                '{authorName}':   "Author name"|t('entry-notifications'),
+                '{authorEmail}':  "Author email"|t('entry-notifications'),
             } %}
             {% for variable, label in vars %}
                 <button type="button" class="en-var-chip" data-var="{{ variable }}"
@@ -91,6 +93,24 @@
                     ">{{ variable }}</button>
             {% endfor %}
         </div>
+    </div>
+</div>
+
+<hr>
+
+<h2>{{ "Test"|t('entry-notifications') }}</h2>
+
+<div class="field">
+    <div class="heading">
+        <div class="instructions">
+            <p>{{ "Send a test email to all configured recipients using the current subject and body (with placeholder values)."|t('entry-notifications') }}</p>
+        </div>
+    </div>
+    <div class="input">
+        <button type="button" class="btn en-send-test-btn">
+            {{ "Send test email"|t('entry-notifications') }}
+        </button>
+        <span class="en-test-result" style="margin-left: 10px; font-size: 13px;"></span>
     </div>
 </div>
 
@@ -120,6 +140,36 @@
             lastField.selectionStart = lastField.selectionEnd = start + variable.length;
             lastField.focus();
         });
+    });
+
+    // Test email button — event delegation to avoid timing issues
+    document.addEventListener('click', function (e) {
+        var testBtn = e.target.closest('.en-send-test-btn');
+        if (!testBtn) return;
+
+        var testResult = document.querySelector('.en-test-result');
+        testBtn.disabled = true;
+        testBtn.textContent = Craft.t('entry-notifications', 'Sending…');
+        testResult.textContent = '';
+        testResult.style.color = '';
+
+        Craft.sendActionRequest('POST', 'entry-notifications/settings/send-test-email')
+            .then(function (response) {
+                var data = response.data;
+                testResult.textContent = data.message;
+                testResult.style.color = data.success ? 'green' : 'red';
+            })
+            .catch(function (e) {
+                var msg = e && e.response && e.response.data && e.response.data.message
+                    ? e.response.data.message
+                    : Craft.t('entry-notifications', 'Request failed.');
+                testResult.textContent = msg;
+                testResult.style.color = 'red';
+            })
+            .finally(function () {
+                testBtn.disabled = false;
+                testBtn.textContent = Craft.t('entry-notifications', 'Send test email');
+            });
     });
 }());
 {% endjs %}
